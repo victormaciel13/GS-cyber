@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   zap_scan:
@@ -33,12 +34,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:3000'
-          fail_action: true
           cmd_options: '-a'
-          report_file: 'zap_report.html'
-
-      - name: Publicar relatório ZAP
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-mentia-report
-          path: zap_report.html
+          fail_action: true
+          artifact_name: 'zap-mentia-report'
