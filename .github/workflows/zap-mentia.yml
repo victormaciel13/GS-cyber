@@ -1,0 +1,44 @@
+name: ZAP Security Scan - MentIA
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Subir aplicação MentIA em background
+        run: |
+          npm start &
+          # espera o servidor subir
+          sleep 20
+
+      - name: Rodar OWASP ZAP Baseline
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:3000'
+          fail_action: true
+          cmd_options: '-a'
+          report_file: 'zap_report.html'
+
+      - name: Publicar relatório ZAP
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-mentia-report
+          path: zap_report.html
