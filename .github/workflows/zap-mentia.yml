@@ -2,14 +2,19 @@ name: ZAP Security Scan - MentIA
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]     # troque para "main" se sua branch principal for main
   pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches: [ "master" ]
+  workflow_dispatch:           # permite rodar manualmente pelo botão “Run workflow”
 
 jobs:
   zap_scan:
     runs-on: ubuntu-latest
+
+    # 👇 injeta os segredos configurados no repositório
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      NODE_ENV: production
 
     steps:
       - name: Checkout código
@@ -25,8 +30,9 @@ jobs:
 
       - name: Subir aplicação MentIA em background
         run: |
+          echo "Iniciando servidor MentIA com JWT_SECRET=${JWT_SECRET}"
           npm start &
-          # espera o servidor subir
+          # espera o servidor subir antes de iniciar o ZAP
           sleep 20
 
       - name: Rodar OWASP ZAP Baseline
@@ -35,5 +41,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:3000'
           cmd_options: '-a'
-          fail_action: true
+          fail_action: true           # define falha se ZAP encontrar alertas
+          allow_issue_writing: false  # impede tentativa de criar issues no GitHub
           artifact_name: 'zap-mentia-report'
